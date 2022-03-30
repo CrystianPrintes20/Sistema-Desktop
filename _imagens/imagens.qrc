@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="newPrefix">
+    <file>fecha_carterinha.png</file>
+    <file>fecha_carterinha.png</file>
+    <file>dados_branco_fecha.png</file>
+    <file>carteirinha_3.png</file>
     <file>MVA hand.png</file>
     <file>MVA hand 2.png</file>
     <file>icon.ico</file>

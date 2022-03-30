@@ -1,5 +1,6 @@
+from msilib import CAB
 import cv2
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
@@ -12,16 +13,19 @@ import util
 from MVA import confirma
 from PyQt5.QtCore import Qt
 from detalhes_ui import detalhes, normal, displayImage
+# Import only b64decode function from the base64 module
+from base64 import b64decode
+#from PyQt5 import QtWebEngineWidgets
 
 
 USER = ""
 HORARIO_ATUAL = ""
 HD = ""
 DATA = ""
-
+CART = 0
 
 class sis_qr_code(QMainWindow):
-    global HORARIO_ATUAL, HD, USER, DATA
+    global HORARIO_ATUAL, HD, USER, DATA, CART
     HD = datetime.now()
     HORARIO_ATUAL = HD.strftime("%H:%M:%S")
     today = date.today()
@@ -30,13 +34,20 @@ class sis_qr_code(QMainWindow):
     def __init__(self):
 
         super(sis_qr_code, self).__init__()
-        self.window = loadUi("leitor_qr_Copia.ui", self)
+        self.window = loadUi("leitor_qr2.ui", self)
         self.logic = 0
+        self.cart_vac = 0
+        print('primeiro logic', self.logic)
+        print('primeiro cart_vac ', self.cart_vac)
         self.value = 0
         # BOTÃO QUE ABRE A CÂMERA
         self.abrir_camera.clicked.connect(self.onClicked)
         # BOTÃO QUE FECHA A CÂMERA
         self.fechar_camera.clicked.connect(self.CloseCapture)
+        # BOTÃO QUE HABILITA A CARTEIRINHA
+        self.habilita_carteinha.clicked.connect(self.habilitar_carteirinha)
+        # BOTÃO QUE DESABILITA A CARTEIRINHA
+        #self.desabilita_carteinha.clicked.connect(self.desabilitar_carteinha)
         # BOTÃO DE LOGOUT
         self.sair.clicked.connect(self.closeEvent)
         # BOTÃO DE AUTORIZAR
@@ -60,6 +71,9 @@ class sis_qr_code(QMainWindow):
         self.nao.setShortcut(QKeySequence("Delete"))
 
         # CONTROLE DE CAMADAS
+        self.window.mostrar_carteirinha.close()
+        self.window.habilita_carteinha.close()
+        self.window.desabilita_carteinha.close()
         self.window.temp.close()
         self.window.aviso_temp.close()
         self.window.fechar_camera.close()
@@ -77,13 +91,16 @@ class sis_qr_code(QMainWindow):
             "padding-top:5px;\n"
             "padding-left: 5px;\n"
             "align: center;"
+
         )
+
 
     @pyqtSlot()
     def onClicked(self):
         self.window.abrir_camera.close()
         self.window.fechar_camera.show()
         self.window.observacao.close()
+        self.window.habilita_carteinha.close()
         # FUNÇÃO QUE ABRE A CÂMERA
         self.window.imgLabel.show()
         try:
@@ -94,6 +111,7 @@ class sis_qr_code(QMainWindow):
                 frame, ok = read_barcodes(frame)
                 displayImage(self.window, frame, 1)
                 cv2.waitKey(0)
+                
                 if ok is True:
                     self.window.regi_saida.show()
                     self.text_saida.setText("Verificando registro...")
@@ -106,6 +124,7 @@ class sis_qr_code(QMainWindow):
                         "align: center;"
                     )
                     sleep(1)
+
                     (
                         abertura,
                         nome_aluno,
@@ -121,7 +140,7 @@ class sis_qr_code(QMainWindow):
                     ) = dados_aluno()
                     print(dados_aluno())
 
-                    if verificacao is False:
+                    """if verificacao is False:
 
                         self.window.regi_saida.show()
                         self.text_saida.setText(
@@ -136,251 +155,95 @@ class sis_qr_code(QMainWindow):
                             "align: center;"
                         )
                         sleep(7)
-                        self.window.regi_saida.close()
+                        self.window.regi_saida.close()"""
 
-                    elif verificacao is True:
-                        resposta,nome, h_saida = ponto(util.matricula, util.token)
-                        quantidade, fabricante, error = verifica_vacinacao(
-                            util.token, util.matricula
+                    """ elif verificacao is True:"""
+                    print('ksdsdjn')
+                    resposta,nome, h_saida = ponto(util.matricula, util.token)
+                    quantidade, fabricante, error, carteirinha = verifica_vacinacao(
+                        util.token, util.matricula
+                    )
+                    
+                    #print(quantidade, fabricante, error, carteirinha)
+
+                    if error is True:
+                        print(error)
+                        pass
+                    else:
+                        self.window.regi_saida.show()
+                        self.text_saida.setText(error)
+                        self.text_saida.setStyleSheet(
+                            "background-color: rgb(73, 122, 166);\n"
+                            "color: rgb(255, 255, 255);\n"
+                            'font: 75 14pt "Arial";\n'
+                            "padding-top:5px;\n"
+                            "padding-left: 5px;\n"
+                            "align: center;"
                         )
-                        print(quantidade, fabricante, error)
+                        sleep(3)
+                        self.cap.release()
+                        self.window.imgLabel.close()
+                        self.window.fechar_camera.close()
+                        self.window.abrir_camera.show()
+                        self.logic = 0
+                        print("segundo logic", self.logic)
+                        self.window.CAPA.show()
 
-                        if error is True:
-                            pass
-                        else:
-                            self.window.regi_saida.show()
-                            self.text_saida.setText(error)
-                            self.text_saida.setStyleSheet(
-                                "background-color: rgb(73, 122, 166);\n"
-                                "color: rgb(255, 255, 255);\n"
-                                'font: 75 14pt "Arial";\n'
-                                "padding-top:5px;\n"
-                                "padding-left: 5px;\n"
-                                "align: center;"
-                            )
-                            sleep(3)
-                            self.cap.release()
-                            self.window.imgLabel.close()
-                            self.window.fechar_camera.close()
-                            self.window.abrir_camera.show()
-                            self.logic = 0
-                            self.window.CAPA.show()
+                    if resposta is False:
+                        print('Entrou na resposta')
+                        if abertura == 1 or abertura == 2:
+                            print ('abertura 1 ou 2')
+                            self.window.regi_saida.close()
+                            self.window.CAPA.close()
+                            self.window.campus_restricao.close()
+                            self.window.campus_all.show()
 
-                        print('gddfhf')
-                        if resposta is False:
-                            if abertura == 1 or abertura == 2:
-                                self.window.regi_saida.close()
-                                self.window.CAPA.close()
-                                self.window.campus_restricao.close()
-                                self.window.campus_all.show()
-                                if (
-                                    HD < hora_comparacao_ini
-                                    or HD > hora_comparacao_fim
-                                    or data_solicitacao != DATA
+                            """if (
+                                HD < hora_comparacao_ini
+                                or HD > hora_comparacao_fim
+                                or data_solicitacao != DATA
+                            ):"""
+
+                            permissao = "Negado"
+
+                            if quantidade <= 2:
+
+                                if (quantidade == 2) or (
+                                    quantidade == 1
+                                    and fabricante.lower() == "astrazeneca"
                                 ):
+                                    permissao = "Permitido"
 
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() != "astrazeneca"
+                                ) or (quantidade == 0):
                                     permissao = "Negado"
 
-                                elif quantidade <= 2:
+                            self.nome_aluno.setText(nome_aluno)
+                            self.matricula.setText("Matricula: %s" % util.matricula)
+                            self.curso.setText("Curso: %s" % curso)
+                            self.espaco_reservado.setText(
+                                "Espaço Reservado: %s" % area
+                            )
+                            self.hora_ini.setText("Inicio: %s" % hora_ini)
+                            self.hora_fim.setText("Fim: %s" % hora_fim)
+                            self.data.setText("Data: %s" % data_solicitacao)
 
-                                    if (quantidade == 2) or (
-                                        quantidade == 1
-                                        and fabricante.lower() == "astrazeneca"
-                                    ):
-                                        permissao = "Permitido"
 
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() != "astrazeneca"
-                                    ) or (quantidade == 0):
-                                        permissao = "Negado"
+                            # DA SINAL VERMELHO CASO O ACESSO SEJA NEGADO
+                            if permissao == "Negado":
+                                print ('permissão negada')
+                                detalhes(self.window, "255", "0", "0")
+                                self.window.afirmar.close()
+                                self.window.negar.close()
+                                self.observacao.show()
 
-                                self.nome_aluno.setText(nome_aluno)
-                                self.matricula.setText("Matricula: %s" % util.matricula)
-                                self.curso.setText("Curso: %s" % curso)
-                                self.espaco_reservado.setText(
-                                    "Espaço Reservado: %s" % area
-                                )
-                                self.hora_ini.setText("Inicio: %s" % hora_ini)
-                                self.hora_fim.setText("Fim: %s" % hora_fim)
-                                self.data.setText("Data: %s" % data_solicitacao)
-                                # DA SINAL VERMELHO CASO O ACESSO SEJA PERMITIDO
-                                if permissao == "Negado":
-
-                                    detalhes(self.window, "255", "0", "0")
-                                    self.window.afirmar.close()
-                                    self.window.negar.close()
-                                    self.observacao.show()
-
-                                    if quantidade < 2:
-                                        self.observacao.setText(
-                                            "Não tomou as duas doses da vacina\ncontra Covid-19"
-                                        )
-                                        self.observacao.setStyleSheet(
-                                            "background-color: rgb(255, 0, 0);\n"
-                                            "color: rgb(255, 255, 255);\n"
-                                            'font: 75 14pt "Arial";\n'
-                                            "padding-top:5px;\n"
-                                            "padding-left: 5px;\n"
-                                            "align: center;"
-                                        )
-                                    else:
-                                        self.observacao.setText(
-                                            "Acesso negado ao campus\nOu fora do horário reservado"
-                                        )
-                                        self.observacao.setStyleSheet(
-                                            "background-color: rgb(255, 0, 0);\n"
-                                            "color: rgb(255, 255, 255);\n"
-                                            'font: 75 14pt "Arial";\n'
-                                            "padding-top:5px;\n"
-                                            "padding-left: 5px;\n"
-                                            "align: center;"
-                                        )
-
-                                    if quantidade == 0:
-
-                                        self.window.p_dose_all.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_1.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.p_dose_n.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.s_dose_all.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_2.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.s_dose_n.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() != "astrazeneca"
-                                    ):
-                                        self.window.p_dose_all.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_1.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.p_dose_n.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-
-                                    elif quantidade == 2:
-                                        self.window.p_dose_all.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_1.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.p_dose_n.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose_all.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_2.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose_n.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-
-                                    sleep(5)
-                                    normal(self.window)
-                                    self.window.campus_all.close()
-                                    self.window.CAPA.show()
-
-                                # DA SINAL VERDE CASO O ACESSO SEJA PERMITIDO
-                                elif permissao == "Permitido":
-                                    detalhes(self.window, "73", "122", "166")
-                                    self.window.afirmar.show()
-                                    self.window.negar.show()
-                                    if quantidade == 2:
-                                        self.window.p_dose_all.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_1.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.p_dose_n.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose_all.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_2.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose_n.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() == "astrazeneca"
-                                    ):
-                                        self.window.p_dose_all.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_1.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.p_dose_n.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-
-                            elif abertura == 0:
-                                self.window.afirmar.show()
-                                self.window.negar.show()
-                                self.window.regi_saida.close()
-                                self.window.CAPA.close()
-                                self.window.campus_all.close()
-                                self.window.campus_restricao.show()
-                                # data = DATA
-                                if quantidade <= 2:
-                                    if (quantidade == 2) or (
-                                        quantidade == 1
-                                        and fabricante.lower() == "astrazeneca"
-                                    ):
-                                        permissao = "Permitido"
-
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() != "astrazeneca"
-                                    ) or (quantidade == 0):
-                                        permissao = "Negado"
-
-                                self.nome_aluno_r.setText(nome_aluno)
-                                self.matricula_r.setText(
-                                    "Matricula: %s" % util.matricula
-                                )
-                                self.curso_r.setText("Curso: %s" % curso)
-                                self.hora_ini_r.setText("Inicio: %s" % HORARIO_ATUAL)
-                                self.data_r.setText("Data: %s" % data_solicitacao)
-                                # DA SINAL VERMELHO CASO O ACESSO SEJA PERMITIDO
-                                if permissao == "Negado":
-                                    self.window.afirmar.show()
-                                    self.window.negar.show()
-                                    self.window.confirmar.close()
-                                    self.observacao_r.show()
-                                    self.observacao_r.setText(
+                                if quantidade < 2:
+                                    self.observacao.setText(
                                         "Não tomou as duas doses da vacina\ncontra Covid-19"
                                     )
-                                    self.observacao_r.setStyleSheet(
+                                    self.observacao.setStyleSheet(
                                         "background-color: rgb(255, 0, 0);\n"
                                         "color: rgb(255, 255, 255);\n"
                                         'font: 75 14pt "Arial";\n'
@@ -388,117 +251,292 @@ class sis_qr_code(QMainWindow):
                                         "padding-left: 5px;\n"
                                         "align: center;"
                                     )
-                                    detalhes(self.window, "255", "0", "0")
-
-                                    if quantidade == 0:
-                                        self.window.p_dose.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_r.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.p_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.s_dose.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_r_2.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.s_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() != "astrazeneca"
-                                    ):
-                                        self.window.p_dose.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.fig_vac_r.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-                                        self.window.p_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(157, 157, 157);"
-                                        )
-
-                                    sleep(5)
-                                    normal(self.window)
-                                    self.window.campus_restricao.close()
-                                    self.window.CAPA.show()
-
-                                # DA SINAL VERDE CASO O ACESSO SEJA PERMITIDO
-                                elif permissao == "Permitido":
-                                    detalhes(self.window, "73", "122", "166")
-                                    self.window.confirmar.show()
-                                    self.observacao_r.show()
-                                    self.observacao_r.setText(
-                                        "Acesso permitido para locais abertos"
+                                """ else:
+                                    self.observacao.setText(
+                                        "Acesso negado ao campus\nOu fora do horário reservado"
                                     )
-                                    self.observacao_r.setStyleSheet(
-                                        "background-color: rgb(73, 122, 166);\n"
+                                    self.observacao.setStyleSheet(
+                                        "background-color: rgb(255, 0, 0);\n"
                                         "color: rgb(255, 255, 255);\n"
                                         'font: 75 14pt "Arial";\n'
                                         "padding-top:5px;\n"
                                         "padding-left: 5px;\n"
                                         "align: center;"
+                                    )"""
+
+                                if quantidade == 0:
+
+                                    self.window.p_dose_all.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
                                     )
-                                    if quantidade == 2:
-                                        self.window.p_dose.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_r.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.p_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_r_2.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.s_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
+                                    self.window.fig_vac_1.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.p_dose_n.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.s_dose_all.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.fig_vac_2.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.s_dose_n.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
 
-                                    elif (
-                                        quantidade == 1
-                                        and fabricante.lower() == "astrazeneca"
-                                    ):
-                                        self.window.p_dose.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.fig_vac_r.setStyleSheet(
-                                            "image: url(:/newPrefix/2646111.png);\n"
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
-                                        self.window.p_dose_n_r.setStyleSheet(
-                                            "background-color: rgb(73, 122, 166);"
-                                        )
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() != "astrazeneca"
+                                ):
+                                    self.window.p_dose_all.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.fig_vac_1.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.p_dose_n.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
 
-                        elif resposta is True:
-                            self.window.regi_saida.show()
-                            self.text_saida.setText(f"Registrando saída\nàs {h_saida}")
-                            self.text_saida.setStyleSheet(
-                                "background-color: rgb(73, 122, 166);\n"
-                                "color: rgb(255, 255, 255);\n"
-                                'font: 75 14pt "Arial";\n'
-                                "padding-top:5px;\n"
-                                "padding-left: 5px;\n"
-                                "align: center;"
-                            )
-                            sleep(3)
+                                elif quantidade == 2:
+                                    self.window.p_dose_all.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_1.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.p_dose_n.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose_all.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_2.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose_n.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+
+                                sleep(5)
+                                normal(self.window)
+                                self.window.campus_all.close()
+                                self.window.CAPA.show()
+
+                            # DA SINAL VERDE CASO O ACESSO SEJA PERMITIDO
+                            elif permissao == "Permitido":
+                                print ('permissão permitida')
+                                ######
+                                self.window.habilita_carteinha.show()
+                                #####
+                                detalhes(self.window, "73", "122", "166")
+                                self.window.afirmar.show()
+                                self.window.negar.show()
+                                if quantidade == 2:
+                                    self.window.p_dose_all.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_1.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.p_dose_n.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose_all.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_2.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose_n.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() == "astrazeneca"
+                                ):
+                                    self.window.p_dose_all.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_1.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.p_dose_n.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+
+                        elif abertura == 0:
+                            print ('abertura 0')
+                            self.window.afirmar.show()
+                            self.window.negar.show()
                             self.window.regi_saida.close()
-                        elif resposta is not True and resposta is not False:
+                            self.window.CAPA.close()
+                            self.window.campus_all.close()
+                            self.window.campus_restricao.show()
+
+                            # data = DATA
+                            if quantidade <= 2:
+                                if (quantidade == 2) or (
+                                    quantidade == 1
+                                    and fabricante.lower() == "astrazeneca"
+                                ):
+                                    permissao = "Permitido"
+
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() != "astrazeneca"
+                                ) or (quantidade == 0):
+                                    permissao = "Negado"
+
+                            self.nome_aluno_r.setText(nome_aluno)
+                            self.matricula_r.setText(
+                                "Matricula: %s" % util.matricula
+                            )
+                            self.curso_r.setText("Curso: %s" % curso)
+                            self.hora_ini_r.setText("Inicio: %s" % HORARIO_ATUAL)
+                            self.data_r.setText("Data: %s" % data_solicitacao)
+                            # DA SINAL VERMELHO CASO O ACESSO SEJA negado
+                            if permissao == "Negado":
+                                print('permissao negado')
+                                self.window.afirmar.show()
+                                self.window.negar.show()
+                                self.window.confirmar.close()
+                                self.observacao_r.show()
+                                self.observacao_r.setText(
+                                    "Não tomou as duas doses da vacina\ncontra Covid-19"
+                                )
+                                self.observacao_r.setStyleSheet(
+                                    "background-color: rgb(255, 0, 0);\n"
+                                    "color: rgb(255, 255, 255);\n"
+                                    'font: 75 14pt "Arial";\n'
+                                    "padding-top:5px;\n"
+                                    "padding-left: 5px;\n"
+                                    "align: center;"
+                                )
+                                detalhes(self.window, "255", "0", "0")
+
+                                if quantidade == 0:
+                                    self.window.p_dose.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.fig_vac_r.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.p_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.s_dose.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.fig_vac_r_2.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.s_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() != "astrazeneca"
+                                ):
+                                    self.window.p_dose.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.fig_vac_r.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+                                    self.window.p_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(157, 157, 157);"
+                                    )
+
+                                sleep(5)
+                                normal(self.window)
+                                self.window.campus_restricao.close()
+                                self.window.CAPA.show()
+
+                            # DA SINAL VERDE CASO O ACESSO SEJA PERMITIDO
+                            elif permissao == "Permitido":
+
+                                print('permissao permitido')
+                                self.window.habilita_carteinha.show()
+
+                                detalhes(self.window, "73", "122", "166")
+                                self.window.confirmar.show()
+                                self.observacao_r.show()
+                                self.observacao_r.setText(
+                                    "Acesso permitido para locais abertos"
+                                )
+                                self.observacao_r.setStyleSheet(
+                                    "background-color: rgb(73, 122, 166);\n"
+                                    "color: rgb(255, 255, 255);\n"
+                                    'font: 75 14pt "Arial";\n'
+                                    "padding-top:5px;\n"
+                                    "padding-left: 5px;\n"
+                                    "align: center;"
+                                )
+                                if quantidade == 2:
+                                    self.window.p_dose.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_r.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.p_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_r_2.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.s_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+
+                                elif (
+                                    quantidade == 1
+                                    and fabricante.lower() == "astrazeneca"
+                                ):
+                                    self.window.p_dose.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.fig_vac_r.setStyleSheet(
+                                        "image: url(:/newPrefix/2646111.png);\n"
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                                    self.window.p_dose_n_r.setStyleSheet(
+                                        "background-color: rgb(73, 122, 166);"
+                                    )
+                        
+                    elif resposta is True:
+                        self.window.regi_saida.show()
+                        self.text_saida.setText(f"Registrando saída\nàs {h_saida}")
+                        self.text_saida.setStyleSheet(
+                            "background-color: rgb(73, 122, 166);\n"
+                            "color: rgb(255, 255, 255);\n"
+                            'font: 75 14pt "Arial";\n'
+                            "padding-top:5px;\n"
+                            "padding-left: 5px;\n"
+                            "align: center;"
+                        )
+                        sleep(3)
+                        self.window.regi_saida.close()
+                    elif resposta is not True and resposta is not False:
                             self.window.regi_saida.show()
                             self.text_saida.setText(resposta)
                             self.text_saida.setStyleSheet(
@@ -512,7 +550,10 @@ class sis_qr_code(QMainWindow):
                             sleep(3)
                             self.window.regi_saida.close()
 
-                    elif verificacao is not False and verificacao is not True:
+                    """ elif verificacao is not False and verificacao is not True:
+                        # VERIFICA A HORA E O DIA ATUAL DO SISTEMA E COMPARA COM A HORA DE CHEGADA DO ALUNO E O DIA SOLICITADO
+                        # CASO O ALUNO ESTEJA FORA DO HORÁRIO OU DO DIA RESERVADO, O ACESSO SERÁ NEGADO
+
                         self.window.regi_saida.show()
                         self.text_saida.setText(verificacao)
                         self.text_saida.setStyleSheet(
@@ -524,17 +565,39 @@ class sis_qr_code(QMainWindow):
                             "align: center;"
                         )
                         sleep(7)
-                        self.window.regi_saida.close()
-                    # VERIFICA A HORA E O DIA ATUAL DO SISTEMA E COMPARA COM A HORA DE CHEGADA DO ALUNO E O DIA SOLICITADO
-                    # CASO O ALUNO ESTEJA FORA DO HORÁRIO OU DO DIA RESERVADO, O ACESSO SERÁ NEGADO
+                        self.window.regi_saida.close()"""
 
                 elif ok is False:
                     self.window.CAPA.show()
 
+                if self.cart_vac == 1:
+                    print('tudo certo aqui')
+                    ###################################################################
+                    bytes = b64decode(carteirinha, validate=True)
+                    if bytes[0:4] != b'%PDF':
+                        raise ValueError('Missing the PDF file signature')
+
+                    # Write the PDF contents to a local file
+                    f = open('vac_carterinha.pdf', 'wb')
+                    f.write(bytes)
+                    f.close()
+                
+                    view = QtWebEngineWidgets.QWebEngineView()
+                    settings = view.settings()
+                    settings.setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
+                    url = QtCore.QUrl.fromLocalFile('E:/Sistema-Desktop/vac_carterinha.pdf')
+                    view.load(url)
+                    view.resize(640, 480)
+                    view.show()
+                    self.cart_vac = 0
+                    ###################################################################
+
                 if self.logic == 2:
+                    print ('terceiro logic', self.logic)
                     continue
 
                 elif self.logic == 3:
+                    print ('quarto logic', self.logic)
                     break
 
                 elif self.logic == 4:
@@ -545,6 +608,7 @@ class sis_qr_code(QMainWindow):
                     self.window.abrir_camera.show()
                     self.logic = 0
                     self.window.CAPA.show()
+
         except:
             self.window.regi_saida.show()
             self.text_saida.setText("Ocorreu um erro\nPor favor, contatar o técnico")
@@ -581,6 +645,7 @@ class sis_qr_code(QMainWindow):
         close = close.exec()
         if close == QMessageBox.Yes:
             self.logic = 3
+            print ('sexto logic', self.logic)
             self.window.close()
             confirma(cond=True)
         elif close == QMessageBox.Cancel:
@@ -589,7 +654,22 @@ class sis_qr_code(QMainWindow):
                 self.logic = 2
 
     def CloseCapture(self):
+        self.window.habilita_carteinha.close()
         self.logic = 4
+        print('CloseCapture', self.logic)
+       
+
+    def habilitar_carteirinha(self):
+        self.window.habilita_carteinha.show()
+        #self.window.desabilita_carteinha.show()
+
+        self.cart_vac = 1
+
+    def desabilitar_carteinha(self):
+        #self.window.desabilita_carteinha.close()
+        self.window.habilita_carteinha.show()
+
+        self.cart_vac = 0
 
     def opcao_temp(self):
         self.window.aviso_temp.show()
@@ -719,3 +799,5 @@ class sis_qr_code(QMainWindow):
             self.window.aviso_1.setText("Apenas Números")
             self.window.temp.close()
             temperatura = self.window.temperatura.clear()
+
+    

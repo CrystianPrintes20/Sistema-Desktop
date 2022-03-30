@@ -38,7 +38,7 @@
    <string>MInha Vida Acadêmica</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../_imagens/imagens.qrc">
+   <iconset>
     <normaloff>:/newPrefix/icon.ico</normaloff>:/newPrefix/icon.ico</iconset>
   </property>
   <property name="whatsThis">
@@ -450,7 +450,7 @@ p, li { white-space: pre-wrap; }
   </layout>
  </widget>
  <resources>
-  <include location="../_imagens/imagens.qrc"/>
+  <include location="_imagens/imagens.qrc"/>
  </resources>
  <connections/>
 </ui>

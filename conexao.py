@@ -31,7 +31,7 @@ def solicita_dados(token: str = None, n_matricula: str = None):
     try:
         headers = {
             "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json",
+            #"Content-Type": "application/json",
         }
         res = requests.get(url + "/solicitacoes_acessos", headers=headers)
         lista = res.json()
@@ -166,8 +166,9 @@ def verifica_vacinacao(token: str = None, matricula: str = None):
         lista = r.json()
         quantidade = lista["quantidade_vacinas"]
         fabricante = lista["fabricante"].lower()
+        carteirinha = lista['carteirinha_vacinacao']
         error = True
-        return quantidade, fabricante, error
+        return quantidade, fabricante, error, carteirinha
     except:
         error = "Falha ao verificar\nas vacinas.\nContatar o técnico"
         return "", "", error

@@ -67,12 +67,13 @@ def dados_aluno():
     datas, _, area_solicitada, tipo_restricao, verificacao = solicita_dados(
         token, n_matricula
     )
+
     Dados(datas)
     if verificacao is False:
         print("False")
         return "", "", "", "", "", "", "", "", "", "", verificacao
     elif verificacao is True:
-
+        print('true')
         nome_aluno = dados["nome_aluno"]
         data_solicitacao = dados["data_solicitacao"]
         hora_ini = dados["hora_ini"]
