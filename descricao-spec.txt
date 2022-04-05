@@ -10,7 +10,7 @@
 a = Analysis(['MVA.py'],
              pathex=['C:\\Users\\Matheus\\Documents\\GitHub\\Minha-Vida-Academica_Desktop'],
              binaries=[],
-             datas=[('libiconv.dll', '.'),('libzbar-64.dll', '.'),('leitor_qr2.ui', '.'),('login.ui', '.')],
+             datas=[('libiconv.dll', '.'),('libzbar-64.dll', '.'),('leitor_qr2.ui', '.'),('login.ui', '.'),('qt.conf', '.'),('_imagens', '.')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
