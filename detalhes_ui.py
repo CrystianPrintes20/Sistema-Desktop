@@ -1,6 +1,24 @@
 from PyQt5 import QtCore
 from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWebEngineWidgets import QWebEngineSettings, QWebEngineView
+ 
+def MainWindow(window):
+ 
+    window.setWindowTitle("PDF Viewer")
+    window.setGeometry(0, 28, 1000, 750)
+    window.centralWidget = QWidget(window)
 
+    window.webView = QWebEngineView()
+    window.webView.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+    window.webView.settings().setAttribute(QWebEngineSettings.PdfViewerEnabled, True)
+    window.setCentralWidget(window.webView)
+ 
+    def url_changed(window):
+        window.setWindowTitle(window.webView.title())
+ 
+    def go_back(window):
+        window.webView.back()
 
 def detalhes(window, r, g, b):
     window.nome_aluno.setStyleSheet(

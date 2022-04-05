@@ -1,0 +1,15 @@
+
+- src
+	- _imagens
+	- _carteirinhasPdf
+	- _webclient
+		- conexao.py
+	- _utilidade
+		- util.py
+		- detalhes_ui.py
+	- _main
+		- MVA.py
+		- sys_qr_code.py
+	- _design
+		- login.ui
+		- leitor_qr2.ui

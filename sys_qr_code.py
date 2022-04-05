@@ -1,6 +1,8 @@
 from msilib import CAB
+import os
 import cv2
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+from PyQt5 import QtCore
+from PyQt5.QtWebEngineWidgets import QWebEngineSettings, QWebEngineView
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWidgets import QMainWindow, QMessageBox
@@ -581,13 +583,14 @@ class sis_qr_code(QMainWindow):
                     f = open('vac_carterinha.pdf', 'wb')
                     f.write(bytes)
                     f.close()
-                
-                    view = QtWebEngineWidgets.QWebEngineView()
-                    settings = view.settings()
-                    settings.setAttribute(QtWebEngineWidgets.QWebEngineSettings.PluginsEnabled, True)
-                    url = QtCore.QUrl.fromLocalFile('E:/Sistema-Desktop/vac_carterinha.pdf')
-                    view.load(url)
-                    view.resize(640, 480)
+                    view = QWebEngineView()
+                    view.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
+                    view.settings().setAttribute(QWebEngineSettings.PdfViewerEnabled, True)
+                    CURRENT_DIR = os.path.dirname(os.path.realpath(__file__))
+                    view.load(QtCore.QUrl("%s" % (QtCore.QUrl.fromLocalFile(os.path.join(CURRENT_DIR, "vac_carterinha.pdf")).toString())))
+                    view.setGeometry(0, 28, 1000, 750)
+                    view.setWindowTitle("Carteira de Vacina")
+                    view.setWindowIcon(QIcon("icon.ico"))
                     view.show()
                     self.cart_vac = 0
                     ###################################################################
@@ -639,7 +642,7 @@ class sis_qr_code(QMainWindow):
         )
 
         close.setWindowTitle("SCAC - Minha Vida Acadêmica")
-        close.setWindowIcon(QIcon("_imagens/icon.ico"))
+        close.setWindowIcon(QIcon("icon.ico"))
         close.setIcon(QMessageBox.Warning)
         close.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
         close = close.exec()

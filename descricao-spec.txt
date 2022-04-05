@@ -1,0 +1,42 @@
+/// PRa vc criar um arquivo .spec que funcione, primeiramente: Rode a linha de comando
+/// 'pyinstaller MVA.py' no terminal e depois de uns segundos aperte Ctrl + C
+/// para criar um arquivo .spec. Com isso será criado um 'pathex' dentro do arquivo .spec
+/// com o caminho certo de onde esta o projeto "pathex=['O caminho vai ser colocado automaticamente aqui']".
+/// Depois disso, copie o trecho abaixo e cole no arquivo .spec no trecho parecido com este abaixo criado,
+/// alterando tudo, exceto a linha 'pathex' que conterá o caminho criado automaticamente.
+/// Finalizando, rode o comando 'pyinstaller MVA.spec' no terminal, e ele criará o executavel já de acordo 
+/// com as especificações.
+
+a = Analysis(['MVA.py'],
+             pathex=['C:\\Users\\Matheus\\Documents\\GitHub\\Minha-Vida-Academica_Desktop'],
+             binaries=[],
+             datas=[('libiconv.dll', '.'),('libzbar-64.dll', '.'),('leitor_qr2.ui', '.'),('login.ui', '.')],
+             hiddenimports=[],
+             hookspath=[],
+             runtime_hooks=[],
+             excludes=[],
+             win_no_prefer_redirects=False,
+             win_private_assemblies=False,
+             cipher=block_cipher,
+             noarchive=False)
+pyz = PYZ(a.pure, a.zipped_data,
+             cipher=block_cipher)
+exe = EXE(pyz,
+          a.scripts,
+          [],
+          exclude_binaries=True,
+          name='MVA',
+          icon='icon.ico',
+          debug=False,
+          bootloader_ignore_signals=False,
+          strip=False,
+          upx=True,
+          console=False )
+coll = COLLECT(exe,
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               strip=False,
+               upx=True,
+               upx_exclude=[],
+               name='MVA')
