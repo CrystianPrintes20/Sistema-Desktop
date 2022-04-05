@@ -3,3 +3,5 @@ venv
 teste.py
 dist
 build
+pytest.py
+icon.ico
