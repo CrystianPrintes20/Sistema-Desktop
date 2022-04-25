@@ -5,11 +5,12 @@ block_cipher = None
 
 
 a = Analysis(['MVA.py'],
-             pathex=['C:\\Users\\Matheus\\Documents\\GitHub\\Minha-Vida-Academica_Desktop'],
+             pathex=['D:\\GitHub\\Sistema-Desktop'],
              binaries=[],
              datas=[('libiconv.dll', '.'),('libzbar-64.dll', '.'),('leitor_qr2.ui', '.'),('login.ui', '.'),('qt.conf', '.'),('_imagens', '.')],
              hiddenimports=[],
              hookspath=[],
+             hooksconfig={},
              runtime_hooks=[],
              excludes=[],
              win_no_prefer_redirects=False,
@@ -18,6 +19,7 @@ a = Analysis(['MVA.py'],
              noarchive=False)
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
+
 exe = EXE(pyz,
           a.scripts,
           [],
@@ -32,7 +34,7 @@ exe = EXE(pyz,
 coll = COLLECT(exe,
                a.binaries,
                a.zipfiles,
-               a.datas,
+               a.datas, 
                strip=False,
                upx=True,
                upx_exclude=[],

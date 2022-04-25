@@ -1,5 +1,5 @@
 from PyQt5 import QtWidgets
-from util import Token
+from util import Token, sleep
 from conexao import login
 from PyQt5.QtCore import QEventLoop, QTimer
 import sys_qr_code
@@ -24,22 +24,53 @@ def tela_cam():
     usuario = tela_login.usuario.text()
     sys_qr_code.USER = usuario
     senha = tela_login.senha.text()
-    token, res = login(usuario, senha)
+    token, res, tipo = login(usuario, senha)
     if res:
         Token(token)
         # tipo = verifica_tipo(token)
         # Tipo(tipo)
-        tela_login.hide()
-        tela_login.usuario.clear()
-        tela_login.senha.clear()
-
-        main()
+        verif_tipo = tipo
+        print(verif_tipo)
+        if verif_tipo == 0 or verif_tipo == 1 or verif_tipo == 4:
+            tela_login.hide()
+            tela_login.usuario.clear()
+            tela_login.senha.clear()
+            print('xnbshvb')
+            main()
+        else:
+            tela_login.aviso.show()
+            tela_login.aviso.setText("Perfil não permitido!!")
+            tela_login.aviso.setStyleSheet(
+                            'padding: 25px;\n'
+                            'border: 1px solid gray;\n'
+                            'border-radius: 3px\n;'
+                            'margin: 35px;\n'
+                            'font-size: 16px;\n'
+                            'border-color: #e8273b;\n'
+                            'color: rgb(255, 0, 0);\n'
+                            'background-color: #ffdddd;\n'
+            )
+            sleep(7)
+            tela_login.aviso.close()
     elif res is False:
+        tela_login.aviso.show()
         tela_login.aviso.setText("Usuário ou senha incorretos")
-        loop = QEventLoop()
+        tela_login.aviso.setStyleSheet(
+                            'padding: 25px;\n'
+                            'border: 1px solid gray;\n'
+                            'border-radius: 3px\n;'
+                            'margin: 35px;\n'
+                            'font-size: 14px;\n'
+                            'border-color: #e8273b;\n'
+                            'color: rgb(255, 0, 0);\n'
+                            'background-color: #ffdddd;\n'
+            )
+        sleep(7)
+        tela_login.aviso.close()
+        """loop = QEventLoop()
         QTimer.singleShot(3000, loop.quit)
         loop.exec_()
-        tela_login.aviso.setText("")
+        tela_login.aviso.setText("")"""
     elif res is not True and res is not False:
         tela_login.aviso.setText(res)
         loop = QEventLoop()
